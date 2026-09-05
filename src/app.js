@@ -68,16 +68,7 @@ function draw() {
   ctx.fillStyle = "rgba(255,255,255,.025)"; ctx.fill(sphere);
   ctx.strokeStyle = "rgba(255,255,255,.05)"; ctx.lineWidth = .6 * px; ctx.stroke(graticule);
 
-  // brilho quente por tras dos visitados (o feGaussianBlur do design); sombra e em px
-  // de tela, entao nao escala com o zoom — e some enquanto arrasta, pra nao pesar
   ctx.lineJoin = "round";
-  if (!dragging) {
-    ctx.save();
-    ctx.shadowColor = "rgba(255,154,60,.55)"; ctx.shadowBlur = 22 * dpr;
-    ctx.fillStyle = warm;
-    for (const s of shapes) if (visited.has(s.name) && hits(s.bbox, vb)) ctx.fill(s.path);
-    ctx.restore();
-  }
   for (const s of shapes) {
     if (!hits(s.bbox, vb)) continue;
     const on = visited.has(s.name);

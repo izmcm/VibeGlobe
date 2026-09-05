@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "python3 tools/dev-server.py",
-    "test": "node --test \"test/*.test.js\"",
-    "borders": "node tools/build-borders.mjs"
+    "test": "node --test test/*.test.js",
+    "borders": "node tools/build-borders.mjs",
+    "sample": "node tools/build-sample.mjs"
   }
 }

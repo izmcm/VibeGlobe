@@ -11,11 +11,11 @@ fromCsv(await readFile(new URL("../public/sample.csv", import.meta.url), "utf8")
 const A = analyze(idx, pts);
 
 test("o csv de exemplo produz o painel esperado", () => {
-  assert.equal(A.total, 30);
+  assert.equal(A.total, 1499);                        // acervo de verdade: varias fotos por lugar
   assert.equal(A.countries[0].name, "Brasil");
-  assert.equal(A.countries[0].count, 5);              // Noronha nao conta: fora do dataset 50m
+  assert.equal(A.countries[0].count, 314);            // as 44 de Noronha ficam de fora: ilha ausente no 50m
   assert.equal(A.nContinents, 6);                     // falta a Antartida
-  assert.equal(A.nCells, 29);                         // 30 fotos, mas casa e boa viagem ficam a 1 km
+  assert.equal(A.nCells, 98);                         // 31 destinos viram 98 celulas de ~20 km
   assert.equal(A.countries.length, 22);
 });
 
@@ -25,16 +25,17 @@ test("extremos e salto batem com a geografia", () => {
   assert.equal(A.ext.e.name, "Nova Zelândia");        // Auckland, 174.76 E
   assert.equal(A.ext.w.name, "Estados Unidos");       // Las Vegas, 115 W
   assert.equal(A.jump.from, "África do Sul");         // Cidade do Cabo -> Tóquio
-  assert.equal(Math.round(A.jump.d), 14731);
+  assert.equal(Math.round(A.jump.d), 14732);
 });
 
 test("area alcancada: discos de 25 km ao redor de cada foto, so em terra", () => {
-  const teto = pts.length * Math.PI * REACH_KM ** 2;   // 30 discos sem sobreposicao nem mar
-  assert.ok(A.reachArea < teto, `${A.reachArea} deveria ser menor que o teto ${teto}`);
-  assert.ok(A.reachArea > teto * .5, `${A.reachArea} caiu demais abaixo do teto ${teto}`);
-  assert.equal(Math.round(A.reachArea), 43558);
-  assert.equal(A.pct.toFixed(4), "0.0323");            // 43,6 mil km2 de 134,7 milhoes
+  assert.equal(Math.round(A.reachArea), 86363);
+  assert.equal(A.pct.toFixed(4), "0.0641");            // 86,4 mil km2 de 134,7 milhoes
   assert.ok(Math.abs(A.pct - A.reachArea / A.landAreaTotal * 100) < 1e-9);
+  // 1.499 fotos amontoadas em 31 destinos: quase todo disco cai em cima de outro
+  const ingenuo = pts.length * Math.PI * REACH_KM ** 2;
+  assert.ok(A.reachArea < ingenuo * .05,
+    `${Math.round(A.reachArea)} deveria ser bem menor que ${Math.round(ingenuo)}`);
 });
 
 test("o mar nao entra na conta", () => {

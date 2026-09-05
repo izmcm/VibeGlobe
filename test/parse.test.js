@@ -20,6 +20,19 @@ test("takeout: pega geoData, ignora 0,0, cai pro geoDataExif", () => {
   assert.equal(lidas, 4, "3 com GPS + 1 sem, e o album fora da conta");
 });
 
+test("csv: virgula dentro de campo citado nao desloca as colunas", () => {
+  const pts = [];
+  // sem tratar as aspas, c[1] viraria " Recife" e a linha inteira sumiria calada
+  const n = fromCsv('name,latitude,longitude,timestamp\n'
+    + '"Boa Viagem, Recife",-8.13,-34.90,2019-03-10T12:00:00Z\n'
+    + '"Diz ""oi"", Olinda",-8.01,-34.85,2019-09-15T10:00:00Z\n', pts);
+  assert.equal(n, 2);
+  assert.deepEqual(pts, [
+    { lat: -8.13, lng: -34.9, t: 1552219200 },
+    { lat: -8.01, lng: -34.85, t: 1568541600 },
+  ]);
+});
+
 test("csv: header flexivel, epoch ou timestamp, linha ruim ignorada", () => {
   const pts = [];
   assert.equal(fromCsv('name,Latitude,Longitude,timestamp\ncasa,-8.13,-34.90,2019-03-10T12:00:00Z\nruim,,,\n', pts), 2);

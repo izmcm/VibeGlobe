@@ -21,9 +21,12 @@ hospedar de graça no GitHub Pages: o site é só arquivo estático.
    página. Não precisa descompactar: o site lê só os `.json` de dentro e nem toca nos
    bytes das fotos.
 
-Aceita também `.json` soltos e `.csv` com colunas `latitude`/`longitude`
-(e, se quiser data, `timestamp` ISO ou `epoch`). Tem um exemplo pronto em
-[`public/sample.csv`](public/sample.csv) — o botão **Ver exemplo** carrega ele na hora.
+Aceita também `.json` soltos e `.csv` com colunas `latitude`/`longitude` (e, se quiser
+data, `timestamp` ISO ou `epoch`); campos entre aspas podem conter vírgula. O botão
+**Ver exemplo** carrega [`public/sample.csv`](public/sample.csv) na hora: 1.499 fotos em
+31 destinos, agrupadas como um acervo de verdade — várias por lugar, não uma por cidade.
+Gerado por [`tools/build-sample.mjs`](tools/build-sample.mjs) com seed fixa
+(`npm run sample`), então os testes travam os números.
 
 ## Rodando local
 

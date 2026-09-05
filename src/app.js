@@ -26,7 +26,7 @@ const WX = project(180, 0)[0], WY = project(0, -90)[1];   // meia-largura e meia
    reprojecao em JS. E o que segura 50 mil pontos a 60 fps. */
 const cv = $("map"), ctx = cv.getContext("2d", { alpha: false });
 let shapes = [], sphere = null, graticule = null;
-let visited = new Set(), pts = null;
+let visited = new Set(), pts = null, ultima = null;
 let view = { x0: -WX, y0: -WY, s: 1 }, dpr = 1, W = 0, H = 0, dragging = false;
 
 const fitScale = () => Math.min(W / (2 * WX), H / (2 * WY));
@@ -227,6 +227,7 @@ const card = (cls, k, num, dec, of, fill) => `<div class="card ${cls}">
   ${fill != null ? `<div class="track"><i data-fill="${fill}"></i></div>` : ""}</div>`;
 
 function render(A, secs) {
+  ultima = A;
   visited = new Set(A.visitedNames);
 
   // projeta os pontos uma vez; dai em diante mover/zoom e so transformacao afim
@@ -371,23 +372,116 @@ drop.addEventListener("drop", e => {
   if (e.dataTransfer?.files.length) handleFiles(e.dataTransfer.files);
 });
 
-$("reset").onclick = () => {
+function reiniciar() {
   $("dash").hidden = true; $("empty").hidden = false;
   $("file").value = ""; progress(null, null); scrollTo(0, 0);
-};
-$("save").onclick = () => {
-  // ignora de proposito o zoom e o arrasto da tela: o mapa que se compartilha e o
-  // mundo inteiro, centralizado, com todos os pontos
-  const w = 2400, h = 1200, s = Math.min(w / (2 * WX), h / (2 * WY));
-  const off = document.createElement("canvas");
-  off.width = w; off.height = h;
-  paint(off.getContext("2d"), w, h, -w / (2 * s), -h / (2 * s), s, 2);
-  off.toBlob(b => {
+}
+$("reset").onclick = reiniciar;
+$("home").onclick = reiniciar;                             // o titulo volta pro comeco
+/* ---------- imagem pra compartilhar ----------
+   Dois formatos com os mesmos dados: 9:16 pra stories, 16:9 pra post. Os dois
+   reaproveitam paint() num canvas proprio, entao a imagem sai igual esteja a tela
+   onde estiver. */
+const FONTE = 'Archivo, "Helvetica Neue", Helvetica, sans-serif';
+function texto(g, t, x, y, size, { peso = 400, cor = "#e9f0f9", align = "left" } = {}) {
+  g.font = `${peso} ${size}px ${FONTE}`;
+  g.fillStyle = cor; g.textAlign = align; g.textBaseline = "alphabetic";
+  g.fillText(t, x, y);
+}
+function marca(g, x, y, size) {
+  g.fillStyle = "#ffb03a";
+  g.beginPath(); g.arc(x + size * .36, y - size * .3, size * .36, 0, 6.2832); g.fill();
+  texto(g, "VibeGlobe", x + size, y, size, { peso: 600 });
+}
+function mapaEm(w, h) {                                    // mundo inteiro, centralizado
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const s = Math.min(w / (2 * WX), h / (2 * WY));
+  paint(c.getContext("2d"), w, h, -w / (2 * s), -h / (2 * s), s, Math.max(1, w / 1100));
+  return c;
+}
+const pctDe = A => fmt(A.pct, A.pct >= 10 ? 1 : A.pct >= 1 ? 2 : 3) + "%";
+const resumo = A => `${fmt(Math.round(A.reachArea))} km² de chão, em ${A.countries.length} ${A.countries.length === 1 ? "país" : "países"}`;
+const numeros = A => [
+  [fmt(A.countries.length), "países"],
+  [`${A.nContinents}/7`, "continentes"],
+  [fmt(A.nCells), "lugares distintos"],
+  [fmt(A.total), "fotos com GPS"],
+];
+
+function cartaoStories(A) {
+  const w = 1080, h = 1920, pad = 84;
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const g = c.getContext("2d");
+  g.fillStyle = "#071322"; g.fillRect(0, 0, w, h);
+
+  marca(g, pad, 168, 40);
+  texto(g, "Você pisou em", pad, 350, 46, { cor: "#9db0c9" });
+  texto(g, pctDe(A), pad, 520, 158, { peso: 700, cor: "#f7c76b" });
+  texto(g, "da terra firme do planeta", pad, 592, 46);
+  texto(g, resumo(A), pad, 650, 34, { cor: "#9db0c9" });
+
+  const mw = w - pad * 2, mh = 560;
+  g.drawImage(mapaEm(mw, mh), pad, 730);
+  g.strokeStyle = "rgba(255,255,255,.10)"; g.lineWidth = 2; g.strokeRect(pad, 730, mw, mh);
+
+  numeros(A).forEach(([v, k], i) => {
+    const x = pad + (i % 2) * (mw / 2), y = 1490 + Math.floor(i / 2) * 195;
+    texto(g, v, x, y, 86, { peso: 700 });
+    texto(g, k, x, y + 48, 32, { cor: "#9db0c9" });
+  });
+
+  texto(g, "Tudo roda no navegador. Nada é enviado.", pad, h - 96, 30, { cor: "#6b809b" });
+  return c;
+}
+
+function cartaoPaisagem(A) {
+  const w = 1600, h = 900, pad = 68;
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const g = c.getContext("2d");
+  g.drawImage(mapaEm(w, h), 0, 0);
+  // faixa curta e forte so no rodape: um scrim longo escurecia meio mapa e deixava
+  // America do Sul e Australia cor de barro
+  const scrim = g.createLinearGradient(0, h - 300, 0, h);
+  scrim.addColorStop(0, "rgba(7,19,34,0)"); scrim.addColorStop(.55, "rgba(7,19,34,.82)");
+  scrim.addColorStop(1, "rgba(7,19,34,.97)");
+  g.fillStyle = scrim; g.fillRect(0, h - 300, w, 300);
+
+  marca(g, pad, pad + 34, 34);
+  texto(g, "Você pisou em", pad, h - 258, 34, { cor: "#9db0c9" });
+  texto(g, pctDe(A), pad, h - 136, 124, { peso: 700, cor: "#f7c76b" });
+  texto(g, "da terra firme do planeta", pad, h - 84, 34);
+  texto(g, resumo(A), pad, h - 42, 28, { cor: "#9db0c9" });
+
+  // da direita pra esquerda, medindo cada celula: com passo fixo "lugares distintos"
+  // encostava no vizinho
+  const cells = numeros(A);
+  let x = w - pad;
+  for (let i = cells.length - 1; i >= 0; i--) {
+    const [v, k] = cells[i];
+    g.font = `400 26px ${FONTE}`; const lw = g.measureText(k).width;
+    g.font = `700 60px ${FONTE}`; const vw = g.measureText(v).width;
+    texto(g, v, x, h - 130, 60, { peso: 700, align: "right" });
+    texto(g, k, x, h - 92, 26, { cor: "#9db0c9", align: "right" });
+    x -= Math.max(lw, vw) + 48;
+  }
+  texto(g, "Tudo roda no navegador. Nada é enviado.", w - pad, h - 42, 26, { cor: "#6b809b", align: "right" });
+  return c;
+}
+
+async function baixar(qual) {
+  if (!ultima) return;
+  await document.fonts.ready;                              // sem isso o canvas cai na fonte do sistema
+  const c = qual === "stories" ? cartaoStories(ultima) : cartaoPaisagem(ultima);
+  c.toBlob(b => {
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(b); a.download = "vibeglobe.png"; a.click();
+    a.href = URL.createObjectURL(b); a.download = `vibeglobe-${qual}.png`; a.click();
     URL.revokeObjectURL(a.href);
   }, "image/png");
-};
+}
+$("save-story").onclick = () => baixar("stories");
+$("save-wide").onclick = () => baixar("paisagem");
+
 
 /* roadmap: hexagonos H3 ("exploracao real") entram como mais um Path2D projetado aqui,
    e a animacao temporal como um corte por indice em pts.x/pts.y antes do fill. */

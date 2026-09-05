@@ -12,7 +12,7 @@
 <body>
 
 <header class="top">
-  <div class="brand"><i></i>VibeGlobe</div>
+  <button class="brand" id="home" type="button" title="Voltar e carregar outros arquivos"><i aria-hidden="true"></i>VibeGlobe</button>
   <a class="src" href="https://github.com/izmcm/VibeGlobe">GitHub</a>
 </header>
 
@@ -40,7 +40,7 @@
     <div class="steps">
       <div><b>1. Exporte</b>Peça o Google Fotos no Takeout — só os metadados já bastam.</div>
       <div><b>2. Solte tudo aqui</b>O Takeout vem dividido em várias partes: solte todas de uma vez. São lidas na memória, na sua máquina.</div>
-      <div><b>3. Leve com você</b>Baixe seu mapa como imagem pra compartilhar.</div>
+      <div><b>3. Leve com você</b>Baixe um card com seus números, em stories ou paisagem.</div>
     </div>
   </div>
 </section>
@@ -87,8 +87,10 @@
 
   <div class="foot">
     <span id="footnote"></span>
-    <div style="display:flex; gap:9px">
-      <button class="btn" id="save">Baixar meu mapa</button>
+    <div class="acoes">
+      <span class="dl">Baixar imagem:</span>
+      <button class="btn" id="save-story">Stories 9:16</button>
+      <button class="btn" id="save-wide">Paisagem 16:9</button>
       <button class="btn ghost" id="reset">Carregar outro arquivo</button>
     </div>
   </div>

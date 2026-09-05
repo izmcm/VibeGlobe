@@ -45,7 +45,9 @@ a{color:var(--gold)} a:hover{color:#fff}
 
 /* ---------- chrome ---------- */
 header.top{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:22px 22px 0; max-width:1180px; margin:0 auto}
-.brand{display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:-.02em; font-size:17px}
+.brand{display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:-.02em; font-size:17px;
+  font-family:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer}
+.brand:hover{color:var(--gold)}
 .brand i{width:13px; height:13px; border-radius:50%; background:linear-gradient(120deg,var(--amber),var(--coral)); display:block}
 .top .src{font-size:13px; color:var(--ink-3); text-decoration:none}
 .top .src:hover{color:var(--ink-2)}
@@ -142,6 +144,8 @@ ol.rank .ct{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(-
 .note b{color:var(--ink-2); font-weight:600}
 .note em{font-style:normal; color:var(--ink-2)}
 .foot{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-top:26px; color:var(--ink-3); font-size:13px}
+.acoes{display:flex; gap:9px; align-items:center; flex-wrap:wrap}
+.acoes .dl{color:var(--ink-3); font-size:13px}
 .btn{font:inherit; font-size:14px; font-weight:500; color:#160d02; background:linear-gradient(100deg,var(--amber),var(--coral)); border:0; border-radius:10px; padding:11px 18px; cursor:pointer}
 .btn.ghost{background:none; color:var(--ink-2); border:1px solid var(--line)}
 

@@ -147,8 +147,10 @@ IP de quem visita, e a página inteira promete o contrário. 85 KB no total.
 - Nomear cidades offline com o GeoNames `cities15000` (vizinho mais próximo via k-d
   tree) → métrica "X cidades".
 - Modo "exploração real" por hexágonos H3 (células tocadas), além de países visitados.
-- Animação temporal e export de vídeo vertical. (O export de **imagem** já existe:
-  "Baixar meu mapa" salva o canvas em PNG, também sem sair do navegador.)
+- Animação temporal e export de vídeo. (O export de **imagem** já existe: dois cards
+  PNG com o mapa e os números — 1080×1920 pra stories e 1600×900 pra post — desenhados
+  no canvas, sem sair do navegador. Saem sempre com o mundo inteiro centralizado,
+  independente de onde o mapa da tela estiver.)
 
 ## Design
 

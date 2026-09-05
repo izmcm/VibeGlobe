@@ -406,8 +406,13 @@ const numeros = A => [
   [fmt(A.countries.length), "países"],
   [`${A.nContinents}/7`, "continentes"],
   [fmt(A.nCells), "lugares distintos"],
-  [fmt(A.total), "fotos com GPS"],
 ];
+// o eixo que importa em cada extremo: latitude no norte/sul, longitude no leste/oeste
+const extremos = A => [["Norte", A.ext.n, 1], ["Sul", A.ext.s, 1], ["Leste", A.ext.e, 0], ["Oeste", A.ext.w, 0]]
+  .filter(([, p]) => p)
+  .map(([dir, p, ehLat]) => [dir, p.name, ehLat
+    ? `${fmt(Math.abs(p.lat), 1)}° ${p.lat >= 0 ? "N" : "S"}`
+    : `${fmt(Math.abs(p.lng), 1)}° ${p.lng >= 0 ? "L" : "O"}`]);
 
 function cartaoStories(A) {
   const w = 1080, h = 1920, pad = 84;
@@ -426,12 +431,18 @@ function cartaoStories(A) {
   g.strokeStyle = "rgba(255,255,255,.10)"; g.lineWidth = 2; g.strokeRect(pad, 730, mw, mh);
 
   numeros(A).forEach(([v, k], i) => {
-    const x = pad + (i % 2) * (mw / 2), y = 1490 + Math.floor(i / 2) * 195;
-    texto(g, v, x, y, 86, { peso: 700 });
-    texto(g, k, x, y + 48, 32, { cor: "#9db0c9" });
+    const x = pad + i * (mw / 3);
+    texto(g, v, x, 1440, 82, { peso: 700 });
+    texto(g, k, x, 1486, 30, { cor: "#9db0c9" });
   });
 
-  texto(g, "Tudo roda no navegador. Nada é enviado.", pad, h - 96, 30, { cor: "#6b809b" });
+  texto(g, "Seus extremos", pad, 1590, 30, { cor: "#9db0c9" });
+  extremos(A).forEach(([dir, nome, coord], i) => {
+    const y = 1652 + i * 62;
+    texto(g, dir, pad, y, 30, { cor: "#6b809b" });
+    texto(g, nome, pad + 132, y, 34);
+    texto(g, coord, w - pad, y, 30, { cor: "#9db0c9", align: "right" });
+  });
   return c;
 }
 
@@ -461,11 +472,13 @@ function cartaoPaisagem(A) {
     const [v, k] = cells[i];
     g.font = `400 26px ${FONTE}`; const lw = g.measureText(k).width;
     g.font = `700 60px ${FONTE}`; const vw = g.measureText(v).width;
-    texto(g, v, x, h - 130, 60, { peso: 700, align: "right" });
-    texto(g, k, x, h - 92, 26, { cor: "#9db0c9", align: "right" });
+    texto(g, v, x, h - 148, 60, { peso: 700, align: "right" });
+    texto(g, k, x, h - 110, 26, { cor: "#9db0c9", align: "right" });
     x -= Math.max(lw, vw) + 48;
   }
-  texto(g, "Tudo roda no navegador. Nada é enviado.", w - pad, h - 42, 26, { cor: "#6b809b", align: "right" });
+  // extremos numa linha só: em 16:9 não sobra coluna, e a inicial já identifica a direção
+  texto(g, extremos(A).map(([d, n]) => `${d[0]} ${n}`).join("   ·   "), w - pad, h - 48, 26,
+        { cor: "#9db0c9", align: "right" });
   return c;
 }
 

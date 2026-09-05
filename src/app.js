@@ -25,7 +25,7 @@ const WX = project(180, 0)[0], WY = project(0, -90)[1];   // meia-largura e meia
    dar zoom continua sendo transformacao afim: um setTransform por quadro, zero
    reprojecao em JS. E o que segura 50 mil pontos a 60 fps. */
 const cv = $("map"), ctx = cv.getContext("2d", { alpha: false });
-let shapes = [], sphere = null, graticule = null, warm = null;
+let shapes = [], sphere = null, graticule = null;
 let visited = new Set(), pts = null;
 let view = { x0: -WX, y0: -WY, s: 1 }, dpr = 1, W = 0, H = 0, dragging = false;
 
@@ -51,38 +51,46 @@ function resize() {
 let raf = 0;
 const invalidate = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; draw(); }); };
 
-function draw() {
-  if (!W) return;
-  const k = view.s * dpr;
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  // a agua vai pintada dentro do canvas (e nao so no CSS do cartao) pro PNG exportado sair igual
-  const g = ctx.createLinearGradient(0, 0, 0, cv.height);
-  g.addColorStop(0, "#0a1a2d"); g.addColorStop(1, "#071322");
-  ctx.fillStyle = g; ctx.fillRect(0, 0, cv.width, cv.height);
+/**
+ * Desenha o mapa em qualquer contexto e qualquer enquadramento — a tela usa a view
+ * atual, o PNG exportado usa o mundo inteiro centralizado.
+ * @param w,h    tamanho do alvo, em pixels de verdade
+ * @param s      pixels por unidade de mundo
+ * @param unit   quantos pixels do alvo valem um "pixel de desenho" (traco, ponto)
+ * @param stride 1 desenha todo ponto; maior desenha uma amostra
+ */
+function paint(g, w, h, x0, y0, s, unit, stride = 1) {
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  // a agua vai pintada dentro do canvas (e nao so no CSS do cartao) pro PNG sair igual
+  const water = g.createLinearGradient(0, 0, 0, h);
+  water.addColorStop(0, "#0a1a2d"); water.addColorStop(1, "#071322");
+  g.fillStyle = water; g.fillRect(0, 0, w, h);
   if (!shapes.length) return;
-  ctx.setTransform(k, 0, 0, k, -view.x0 * k, -view.y0 * k);
 
-  const px = 1 / view.s;                                   // 1 px do CSS em unidades de mundo
-  const vb = [view.x0, view.y0, view.x0 + W / view.s, view.y0 + H / view.s];
+  // as coordenadas do gradiente sao lidas na hora do fill, ja sob a transformacao
+  const warm = g.createLinearGradient(-WX, 0, WX, 0);
+  warm.addColorStop(0, "#ffc24a"); warm.addColorStop(.45, "#ff9a3c"); warm.addColorStop(1, "#ff6248");
 
-  ctx.fillStyle = "rgba(255,255,255,.025)"; ctx.fill(sphere);
-  ctx.strokeStyle = "rgba(255,255,255,.05)"; ctx.lineWidth = .6 * px; ctx.stroke(graticule);
+  g.setTransform(s, 0, 0, s, -x0 * s, -y0 * s);
+  const px = unit / s;                                     // 1 px de desenho, em unidades de mundo
+  const vb = [x0, y0, x0 + w / s, y0 + h / s];
 
-  ctx.lineJoin = "round";
-  for (const s of shapes) {
-    if (!hits(s.bbox, vb)) continue;
-    const on = visited.has(s.name);
-    ctx.fillStyle = on ? warm : "#2b3a51";
-    ctx.strokeStyle = on ? "rgba(255,220,160,.5)" : "#17263a";
-    ctx.lineWidth = .6 * px;
-    ctx.fill(s.path, "evenodd");                           // evenodd: buracos certos sem depender da orientacao dos aneis
-    ctx.stroke(s.path);
+  g.fillStyle = "rgba(255,255,255,.025)"; g.fill(sphere);
+  g.strokeStyle = "rgba(255,255,255,.05)"; g.lineWidth = .6 * px; g.stroke(graticule);
+
+  g.lineJoin = "round";
+  for (const sh of shapes) {
+    if (!hits(sh.bbox, vb)) continue;
+    const on = visited.has(sh.name);
+    g.fillStyle = on ? warm : "#2b3a51";
+    g.strokeStyle = on ? "rgba(255,220,160,.5)" : "#17263a";
+    g.lineWidth = .6 * px;
+    g.fill(sh.path, "evenodd");            // evenodd: buracos certos sem depender da orientacao dos aneis
+    g.stroke(sh.path);
   }
 
   if (pts) {
-    // arrastando: desenha uma amostra pra manter o gesto a 60 fps; ao soltar, tudo
-    const n = pts.x.length, stride = dragging ? Math.max(1, Math.ceil(n / 9000)) : 1;
-    const r = 2.4 * px, dots = new Path2D();
+    const n = pts.x.length, r = 2.4 * px, dots = new Path2D();
     for (let i = 0; i < n; i += stride) {
       const x = pts.x[i], y = pts.y[i];
       if (x < vb[0] || x > vb[2] || y < vb[1] || y > vb[3]) continue;
@@ -92,16 +100,21 @@ function draw() {
     // Chapado, sem contorno e sem halo: onde as fotos se amontoam, borda e brilho
     // empilham e viram mingau. O --ink da paleta e a unica cor que se segura nos tres
     // fundos que existem aqui — pais laranja, terra nao visitada e mar.
-    ctx.fillStyle = "#e9f0f9";
-    ctx.fill(dots);
+    g.fillStyle = "#e9f0f9";
+    g.fill(dots);
   }
 }
+
+function draw() {
+  if (!W) return;
+  // arrastando: desenha uma amostra pra manter o gesto a 60 fps; ao soltar, tudo
+  const stride = dragging && pts ? Math.max(1, Math.ceil(pts.x.length / 9000)) : 1;
+  paint(ctx, cv.width, cv.height, view.x0, view.y0, view.s * dpr, dpr, stride);
+}
+
 const hits = (b, v) => !(b[2] < v[0] || b[0] > v[2] || b[3] < v[1] || b[1] > v[3]);
 
 function buildShapes(gj) {
-  warm = ctx.createLinearGradient(-WX, 0, WX, 0);
-  warm.addColorStop(0, "#ffc24a"); warm.addColorStop(.45, "#ff9a3c"); warm.addColorStop(1, "#ff6248");
-
   sphere = new Path2D();
   for (let lat = -90, first = true; lat <= 90; lat += 2, first = false) {
     const [x, y] = project(-180, lat); first ? sphere.moveTo(x, y) : sphere.lineTo(x, y);
@@ -278,7 +291,7 @@ function render(A, secs) {
     + `onde foi tirada. Essas áreas são somadas uma única vez — fotos próximas não contam o mesmo chão duas vezes — e apenas as `
     + `porções em terra firme entram no total, que é dividido pela área de terra firme do planeta.<br><br>`
 
-    + `<b>O mapa mostra outra coisa.</b> Ele pinta por inteiro todo país em que há ao menos uma foto, porque as áreas de `
+    + `O mapa pinta por inteiro todo país em que há ao menos uma foto, porque as áreas de `
     + `${A.reachKm} km seriam invisíveis nessa escala. Uma única foto em Vladivostok pinta a Rússia inteira no mapa e acrescenta `
     + `cerca de ${fmt(disco)} km² à porcentagem, ou ${fmt(disco / A.landAreaTotal * 100, 3)}% da terra firme. As duas leituras `
     + `são deliberadamente diferentes: o mapa responde onde você esteve, a porcentagem responde quanto de chão você cobriu.<br><br>`
@@ -362,11 +375,19 @@ $("reset").onclick = () => {
   $("dash").hidden = true; $("empty").hidden = false;
   $("file").value = ""; progress(null, null); scrollTo(0, 0);
 };
-$("save").onclick = () => cv.toBlob(b => {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(b); a.download = "vibeglobe.png"; a.click();
-  URL.revokeObjectURL(a.href);
-}, "image/png");
+$("save").onclick = () => {
+  // ignora de proposito o zoom e o arrasto da tela: o mapa que se compartilha e o
+  // mundo inteiro, centralizado, com todos os pontos
+  const w = 2400, h = 1200, s = Math.min(w / (2 * WX), h / (2 * WY));
+  const off = document.createElement("canvas");
+  off.width = w; off.height = h;
+  paint(off.getContext("2d"), w, h, -w / (2 * s), -h / (2 * s), s, 2);
+  off.toBlob(b => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(b); a.download = "vibeglobe.png"; a.click();
+    URL.revokeObjectURL(a.href);
+  }, "image/png");
+};
 
 /* roadmap: hexagonos H3 ("exploracao real") entram como mais um Path2D projetado aqui,
    e a animacao temporal como um corte por indice em pts.x/pts.y antes do fill. */

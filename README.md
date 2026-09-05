@@ -16,10 +16,15 @@ hospedar de graça no GitHub Pages: o site é só arquivo estático.
 2. **Desmarcar tudo** e marcar **somente Google Fotos** — o resto é peso morto e o
    download demora horas à toa.
 3. Em "Vários formatos", confira que os metadados saem em **JSON** (é o padrão).
-4. Exportar → tipo de arquivo **.zip**, tamanho 2 GB ou 4 GB.
-5. Quando o e-mail chegar, baixe os `.zip` e arraste **os arquivos .zip fechados** para a
+4. Exportar → tipo de arquivo **.zip** (não `.tgz`), tamanho 2 GB ou 4 GB.
+5. Quando o e-mail chegar, baixe **todas as partes** — o Google divide o export em
+   `takeout-…-001.zip`, `-002.zip`, e assim por diante — e solte **todas de uma vez** na
    página. Não precisa descompactar: o site lê só os `.json` de dentro e nem toca nos
    bytes das fotos.
+
+Cada parte `.zip` é um arquivo independente e completo, por isso dá pra lê-las em
+sequência e somar. Os `.tgz` do Takeout **não** são: lá o arquivo é um só, cortado em
+pedaços que precisam ser concatenados antes. Por isso o passo 4 pede zip.
 
 Aceita também `.json` soltos e `.csv` com colunas `latitude`/`longitude` (e, se quiser
 data, `timestamp` ISO ou `epoch`); campos entre aspas podem conter vírgula. O botão

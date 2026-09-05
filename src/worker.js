@@ -21,9 +21,12 @@ async function collect(files) {
   for (let i = 0; i < files.length; i++) {
     const file = files[i], low = file.name.toLowerCase();
     const base = i / files.length, span = 1 / files.length;
+    // com varias partes o nome do arquivo nao diz nada e ainda estoura a barra;
+    // "parte 3 de 8" diz o que a pessoa quer saber
+    const qual = files.length > 1 ? `parte ${i + 1} de ${files.length}` : file.name;
     if (low.endsWith(".zip")) {
       for await (const e of jsonEntries(file, (done, total) =>
-        (done % 200 === 0) && say(`lendo ${file.name}…`, .05 + .45 * (base + span * done / total)))) {
+        (done % 200 === 0) && say(`lendo ${qual}…`, .05 + .45 * (base + span * done / total)))) {
         try { scanned += fromTakeout(JSON.parse(e.text), pts); } catch { /* json que nao e de foto */ }
       }
     } else if (low.endsWith(".json")) {
@@ -31,7 +34,7 @@ async function collect(files) {
     } else if (low.endsWith(".csv")) {
       scanned += fromCsv(await file.text(), pts);
     }
-    say(`lendo ${file.name}…`, .05 + .45 * (base + span));
+    say(`lendo ${qual}…`, .05 + .45 * (base + span));
   }
   return { pts, scanned };
 }

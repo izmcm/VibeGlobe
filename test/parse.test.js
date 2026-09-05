@@ -55,3 +55,15 @@ for (const f of ["fixture.zip", "fixture-zip64.zip"]) {
     assert.deepEqual(pts[0], { lat: -8.13, lng: -34.9, t: 1652547601 });
   });
 }
+
+test("varias partes do Takeout somam num acervo so", async () => {
+  // o Google divide o export em takeout-...-001.zip, -002.zip... cada um um zip
+  // independente. Ler em sequencia e acumular e exatamente o que o worker faz.
+  const pts = [];
+  let lidas = 0;
+  for (const f of ["fixture.zip", "fixture-zip64.zip"])
+    for await (const e of jsonEntries(await openAsBlob(new URL(f, import.meta.url))))
+      lidas += fromTakeout(JSON.parse(e.text), pts);
+  assert.equal(lidas, 6, "3 fotos em cada parte");
+  assert.equal(pts.length, 6);
+});

@@ -331,7 +331,7 @@ worker.onmessageerror = () => { progress(null, null); toast("Não consegui ler a
 
 function handleFiles(files) {
   files = [...files].filter(f => /\.(zip|json|csv)$/i.test(f.name));
-  if (!files.length) return toast("Mande um .zip do Takeout, .json soltos ou um .csv.");
+  if (!files.length) return toast("Mande os .zip do Takeout, .json soltos ou um .csv.");
   t0 = performance.now();
   progress("lendo arquivo…", .01);
   worker.postMessage({ files });

@@ -98,18 +98,11 @@ function draw() {
       dots.moveTo(x + r, y);
       dots.arc(x, y, r, 0, 6.2832);
     }
-    ctx.save();
-    // halo quente pelo shadow: sai num fill so, em vez de um segundo Path2D com raio
-    // maior. Como a sombra e em px de tela, o halo nao incha com o zoom.
-    if (!dragging) { ctx.shadowColor = "rgba(255,176,58,.95)"; ctx.shadowBlur = 8 * dpr; }
-    ctx.fillStyle = "#fffaf0";
+    // Chapado, sem contorno e sem halo: onde as fotos se amontoam, borda e brilho
+    // empilham e viram mingau. O --ink da paleta e a unica cor que se segura nos tres
+    // fundos que existem aqui — pais laranja, terra nao visitada e mar.
+    ctx.fillStyle = "#e9f0f9";
     ctx.fill(dots);
-    if (!dragging) {                                       // halo e contorno so no quadro parado
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = "rgba(58,20,0,.45)"; ctx.lineWidth = .8 * px;
-      ctx.stroke(dots);                                    // separa o ponto do laranja do pais
-    }
-    ctx.restore();
   }
 }
 const hits = (b, v) => !(b[2] < v[0] || b[0] > v[2] || b[3] < v[1] || b[1] > v[3]);

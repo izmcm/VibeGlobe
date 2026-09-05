@@ -67,8 +67,10 @@ regerar: `npm run borders`.
 
 ### A área alcançada
 
-Uma foto não acende o país inteiro — pisar em Vladivostok não é ter pisado na Rússia. A
-conta é a **área de terra firme a até 25 km de alguma foto** ([`src/stats.js`](src/stats.js)):
+A porcentagem é a **área de terra firme a até 25 km de alguma foto**
+([`src/stats.js`](src/stats.js)) — não a área dos países visitados. Uma foto em
+Vladivostok soma ~1.963 km² à porcentagem, e não os 16,9 milhões de km² da Rússia.
+(O **mapa**, esse sim, pinta o país inteiro: veja *Limitações* abaixo.)
 
 1. cada foto marca as células de uma grade de 0,1° (~11 km) cujo **centro** está a até
    25 km dela — círculo, não quadrado, medido por haversine;

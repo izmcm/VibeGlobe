@@ -288,12 +288,20 @@ function render(A, secs) {
   facts.push(`Faltam <b>${COUNTRIES_TOTAL - nc} países</b> para o mapa fechar. Há tempo.`);
   $("facts").innerHTML = facts.map(f => `<li>${f}</li>`).join("");
 
-  $("note").innerHTML = `<b>Como a porcentagem é calculada:</b> cada foto marca o chão num raio de ${A.reachKm} km ao redor dela — `
-    + `o tanto que dá pra circular a partir de onde você estava. Somamos esse chão (só terra: o mar não conta; e onde as fotos se `
-    + `repetem, o mesmo chão não conta duas vezes) e dividimos pela terra firme do planeta. Uma foto <em>não</em> acende o país `
-    + `inteiro — pisar em Vladivostok não é ter pisado na Rússia inteira, que é o que a métrica de “países visitados” diria.<br><br>`
-    + `“Lugares distintos” agrupa fotos num raio de ~20 km. Fronteiras: Natural Earth 50m; pontos no mar a até 75 km da costa vão `
-    + `para o país mais próximo, e ilhas pequenas demais para esse dataset (Fernando de Noronha, por exemplo) contam como mar aberto.`;
+  const disco = Math.round(Math.PI * A.reachKm ** 2);
+  $("note").innerHTML =
+      `<b>Como a porcentagem é calculada.</b> Cada foto define uma área circular de ${A.reachKm} km de raio ao redor do ponto `
+    + `onde foi tirada. Essas áreas são somadas uma única vez — fotos próximas não contam o mesmo chão duas vezes — e apenas as `
+    + `porções em terra firme entram no total, que é dividido pela área de terra firme do planeta.<br><br>`
+
+    + `<b>O mapa mostra outra coisa.</b> Ele pinta por inteiro todo país em que há ao menos uma foto, porque as áreas de `
+    + `${A.reachKm} km seriam invisíveis nessa escala. Uma única foto em Vladivostok pinta a Rússia inteira no mapa e acrescenta `
+    + `cerca de ${fmt(disco)} km² à porcentagem, ou ${fmt(disco / A.landAreaTotal * 100, 3)}% da terra firme. As duas leituras `
+    + `são deliberadamente diferentes: o mapa responde onde você esteve, a porcentagem responde quanto de chão você cobriu.<br><br>`
+
+    + `<b>Limitações.</b> “Lugares distintos” agrupa fotos numa grade de ~20 km, e não é uma lista de cidades. As fronteiras vêm `
+    + `do Natural Earth 50m: pontos no mar a até 75 km da costa são atribuídos ao país mais próximo, e ilhas pequenas demais para `
+    + `esse dataset — Fernando de Noronha, entre elas — contam como mar aberto.`;
   const dur = secs >= 1 ? `${fmt(secs, 1)} s` : `${Math.round(secs * 1000)} ms`;
   $("footnote").textContent = `Processado localmente em ${dur} · ${fmt(A.scanned)} fotos lidas · nenhum byte saiu deste aparelho.`;
 

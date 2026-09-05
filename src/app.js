@@ -472,13 +472,17 @@ function cartaoPaisagem(A) {
     const [v, k] = cells[i];
     g.font = `400 26px ${FONTE}`; const lw = g.measureText(k).width;
     g.font = `700 60px ${FONTE}`; const vw = g.measureText(v).width;
-    texto(g, v, x, h - 148, 60, { peso: 700, align: "right" });
-    texto(g, k, x, h - 110, 26, { cor: "#9db0c9", align: "right" });
+    texto(g, v, x, h - 200, 60, { peso: 700, align: "right" });
+    texto(g, k, x, h - 162, 26, { cor: "#9db0c9", align: "right" });
     x -= Math.max(lw, vw) + 48;
   }
-  // extremos numa linha só: em 16:9 não sobra coluna, e a inicial já identifica a direção
-  texto(g, extremos(A).map(([d, n]) => `${d[0]} ${n}`).join("   ·   "), w - pad, h - 48, 26,
-        { cor: "#9db0c9", align: "right" });
+  // Duas linhas em vez de uma: numa linha só o bloco atravessava o cartao e o rotulo
+  // encostava em "em 22 paises", virando uma frase so. Em duas ele fica na coluna da
+  // direita, longe da manchete.
+  const ex = extremos(A).map(([d, n]) => `${d[0]} ${n}`);
+  texto(g, "Seus extremos", w - pad, h - 116, 22, { cor: "#6b809b", align: "right" });
+  texto(g, ex.slice(0, 2).join("   ·   "), w - pad, h - 80, 26, { cor: "#9db0c9", align: "right" });
+  texto(g, ex.slice(2).join("   ·   "), w - pad, h - 44, 26, { cor: "#9db0c9", align: "right" });
   return c;
 }
 
